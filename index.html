@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Visualization Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .data-input {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .data-input h2 {
+            margin-bottom: 15px;
+            color: #444;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .data-table th {
+            background-color: #f2f2f2;
+        }
+        
+        .data-table input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button.secondary {
+            background-color: #2196F3;
+        }
+        
+        button.secondary:hover {
+            background-color: #0b7dda;
+        }
+        
+        .chart-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-box {
+            flex: 1;
+            min-width: 300px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+        }
+        
+        .chart-box h3 {
+            margin-bottom: 15px;
+            color: #333;
+            text-align: center;
+        }
+        
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .chart-options {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .option-group {
+            margin-bottom: 10px;
+        }
+        
+        .option-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .color-option.active {
+            border-color: #333;
+        }
+        
+        .sample-data-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .display-options {
+            margin-bottom: 15px;
+        }
+        
+        .display-options label {
+            margin-right: 15px;
+        }
+        
+        .add-row-btn {
+            margin-top: 10px;
+            background-color: #607D8B;
+        }
+        
+        .add-row-btn:hover {
+            background-color: #546E7A;
+        }
+        
+        @media (max-width: 768px) {
+            .chart-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Data Visualization Dashboard</h1>
+            <p>Visualize your data with interactive line and pie charts</p>
+        </header>
+        
+        <div class="data-input">
+            <h2>Enter Your Data</h2>
+            <p>Add your data in the table below. Each row represents a data point with a label and value.</p>
+            
+            <table class="data-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Label</th>
+                        <th>Value</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td><input type="text" class="label-input" placeholder="e.g. Jan"></td>
+                        <td><input type="number" class="value-input" placeholder="e.g. 10"></td>
+                        <td><button onclick="removeRow(this)" class="secondary">Remove</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <button onclick="addRow()" class="add-row-btn">Add Row</button>
+            
+            <div class="sample-data-buttons">
+                <button onclick="loadSampleTimeData()" class="secondary">Load Sample Time Series Data</button>
+                <button onclick="loadSampleCategoryData()" class="secondary">Load Sample Category Data</button>
+            </div>
+            
+            <div class="display-options">
+                <h3>Display Options</h3>
+                <label>
+                    <input type="checkbox" id="showLine" checked> Show Line Chart
+                </label>
+                <label>
+                    <input type="checkbox" id="showPie" checked> Show Pie Chart
+                </label>
+            </div>
+            
+            <div class="buttons">
+                <button onclick="visualizeData()">Visualize Data</button>
+                <button onclick="clearCharts()" class="secondary">Clear Charts</button>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-box" id="lineChartBox">
+                <h3>Line Chart</h3>
+                <canvas id="lineChart" width="400" height="300"></canvas>
+                <div class="chart-options">
+                    <div class="option-group">
+                        <label>Line Color</label>
+                        <div class="color-picker" id="lineColorPicker">
+                            <div class="color-option active" style="background-color: #4CAF50;" data-color="#4CAF50"></div>
+                            <div class="color-option" style="background-color: #2196F3;" data-color="#2196F3"></div>
+                            <div class="color-option" style="background-color: #FF5722;" data-color="#FF5722"></div>
+                            <div class="color-option" style="background-color: #9C27B0;" data-color="#9C27B0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-box" id="pieChartBox">
+                <h3>Pie Chart</h3>
+                <canvas id="pieChart" width="400" height="300"></canvas>
+                <div class="chart-options">
+                    <div class="option-group">
+                        <label>Color Scheme</label>
+                        <div class="color-picker" id="pieColorScheme">
+                            <div class="color-option active" style="background-color: #4CAF50;" data-scheme="green"></div>
+                            <div class="color-option" style="background-color: #2196F3;" data-scheme="blue"></div>
+                            <div class="color-option" style="background-color: #FF9800;" data-scheme="orange"></div>
+                            <div class="color-option" style="background-color: #E91E63;" data-scheme="pink"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables to store chart instances
+        let lineChartInstance = null;
+        let pieChartInstance = null;
+        
+        // Global variables for chart options
+        let lineColor = '#4CAF50';
+        let pieColorScheme = 'green';
+        
+        // Function to add a new row to the data table
+        function addRow() {
+            const tableBody = document.getElementById('tableBody');
+            const newRow = document.createElement('tr');
+            
+            newRow.innerHTML = `
+                <td><input type="text" class="label-input" placeholder="e.g. Jan"></td>
+                <td><input type="number" class="value-input" placeholder="e.g. 10"></td>
+                <td><button onclick="removeRow(this)" class="secondary">Remove</button></td>
+            `;
+            
+            tableBody.appendChild(newRow);
+        }
+        
+        // Function to remove a row from the data table
+        function removeRow(button) {
+            const row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
+        
+        // Function to collect data from the table
+        function collectTableData() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            const labels = [];
+            const values = [];
+            
+            rows.forEach(row => {
+                const labelInput = row.querySelector('.label-input');
+                const valueInput = row.querySelector('.value-input');
+                
+                if (labelInput.value && valueInput.value) {
+                    labels.push(labelInput.value);
+                    values.push(parseFloat(valueInput.value));
+                }
+            });
+            
+            return { labels, values };
+        }
+        
+        // Sample data
+        function loadSampleTimeData() {
+            clearTableData();
+            
+            const sampleData = {
+                "Jan": 5,
+                "Feb": 12,
+                "Mar": 18,
+                "Apr": 23,
+                "May": 17,
+                "Jun": 9,
+                "Jul": 11,
+                "Aug": 15,
+                "Sep": 19,
+                "Oct": 14,
+                "Nov": 8,
+                "Dec": 6
+            };
+            
+            populateTableWithData(sampleData);
+        }
+        
+        function loadSampleCategoryData() {
+            clearTableData();
+            
+            const sampleData = {
+                "Mobile": 35,
+                "Desktop": 45,
+                "Tablet": 15,
+                "Other": 5
+            };
+            
+            populateTableWithData(sampleData);
+        }
+        
+        // Function to clear table data
+        function clearTableData() {
+            document.getElementById('tableBody').innerHTML = '';
+        }
+        
+        // Function to populate table with data
+        function populateTableWithData(data) {
+            clearTableData();
+            const tableBody = document.getElementById('tableBody');
+            
+            Object.entries(data).forEach(([label, value]) => {
+                const newRow = document.createElement('tr');
+                
+                newRow.innerHTML = `
+                    <td><input type="text" class="label-input" value="${label}" placeholder="e.g. Jan"></td>
+                    <td><input type="number" class="value-input" value="${value}" placeholder="e.g. 10"></td>
+                    <td><button onclick="removeRow(this)" class="secondary">Remove</button></td>
+                `;
+                
+                tableBody.appendChild(newRow);
+            });
+        }
+        
+        // Initialize color pickers
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove active class from siblings
+                this.parentNode.querySelectorAll('.color-option').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                // Add active class to clicked option
+                this.classList.add('active');
+                
+                // Update color variables
+                if (this.parentNode.id === 'lineColorPicker') {
+                    lineColor = this.getAttribute('data-color');
+                    if (lineChartInstance) {
+                        lineChartInstance.data.datasets[0].borderColor = lineColor;
+                        lineChartInstance.data.datasets[0].backgroundColor = lineColor + '33';
+                        lineChartInstance.update();
+                    }
+                } else if (this.parentNode.id === 'pieColorScheme') {
+                    pieColorScheme = this.getAttribute('data-scheme');
+                    if (pieChartInstance) {
+                        pieChartInstance.data.datasets[0].backgroundColor = generatePieColors(pieChartInstance.data.labels.length, pieColorScheme);
+                        pieChartInstance.update();
+                    }
+                }
+            });
+        });
+        
+        // Main function to visualize data
+        function visualizeData() {
+            const { labels, values } = collectTableData();
+            
+            if (labels.length === 0 || values.length === 0) {
+                alert('Please enter at least one data point');
+                return;
+            }
+            
+            // Check which charts to display
+            const showLine = document.getElementById('showLine').checked;
+            const showPie = document.getElementById('showPie').checked;
+            
+            // Show/hide chart boxes
+            document.getElementById('lineChartBox').style.display = showLine ? 'block' : 'none';
+            document.getElementById('pieChartBox').style.display = showPie ? 'block' : 'none';
+            
+            if (showLine) {
+                createLineChart(labels, values);
+            } else if (lineChartInstance) {
+                lineChartInstance.destroy();
+                lineChartInstance = null;
+            }
+            
+            if (showPie) {
+                createPieChart(labels, values);
+            } else if (pieChartInstance) {
+                pieChartInstance.destroy();
+                pieChartInstance = null;
+            }
+        }
+        
+        // Function to create the line chart
+        function createLineChart(labels, values) {
+            const ctx = document.getElementById('lineChart').getContext('2d');
+            
+            // Clear previous chart
+            if (lineChartInstance) {
+                lineChartInstance.destroy();
+            }
+            
+            lineChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Data Values',
+                        data: values,
+                        borderColor: lineColor,
+                        backgroundColor: lineColor + '33', // Adding transparency
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: lineColor,
+                        fill: true,
+                        tension: 0.4 // Smoothing the line
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            padding: 10,
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 14
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Function to generate colors for pie chart
+        function generatePieColors(count, scheme) {
+            let colors = [];
+            
+            // Base colors for different schemes
+            const baseColors = {
+                green: [46, 204, 113],
+                blue: [41, 128, 185],
+                orange: [230, 126, 34],
+                pink: [231, 76, 60]
+            };
+            
+            const base = baseColors[scheme] || baseColors.green;
+            
+            for (let i = 0; i < count; i++) {
+                // Create variations of the base color
+                const r = Math.max(0, Math.min(255, base[0] + (i - count/2) * 25));
+                const g = Math.max(0, Math.min(255, base[1] + (i - count/2) * 15));
+                const b = Math.max(0, Math.min(255, base[2] + (i - count/2) * 20));
+                
+                colors.push(`rgba(${r}, ${g}, ${b}, 0.8)`);
+            }
+            
+            return colors;
+        }
+        
+        // Function to create the pie chart
+        function createPieChart(labels, values) {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            
+            // Clear previous chart
+            if (pieChartInstance) {
+                pieChartInstance.destroy();
+            }
+            
+            // Generate colors based on the selected scheme
+            const pieColors = generatePieColors(labels.length, pieColorScheme);
+            
+            pieChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: pieColors,
+                        borderColor: pieColors.map(color => color.replace('0.8', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            padding: 10,
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 14
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Function to clear charts
+        function clearCharts() {
+            if (lineChartInstance) {
+                lineChartInstance.destroy();
+                lineChartInstance = null;
+            }
+            
+            if (pieChartInstance) {
+                pieChartInstance.destroy();
+                pieChartInstance = null;
+            }
+            
+            clearTableData();
+            addRow(); // Add one empty row
+        }
+        
+        // Chart.js library simulation for standalone implementation
+        class Chart {
+            constructor(ctx, config) {
+                this.ctx = ctx;
+                this.config = config;
+                this.data = config.data;
+                this.options = config.options;
+                this.canvas = ctx.canvas;
+                this.width = this.canvas.width;
+                this.height = this.canvas.height;
+                
+                // Initialize the chart
+                this.draw();
+                
+                return this;
+            }
+            
+            draw() {
+                const ctx = this.ctx;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, this.width, this.height);
+                
+                if (this.config.type === 'line') {
+                    this.drawLineChart();
+                } else if (this.config.type === 'pie') {
+                    this.drawPieChart();
+                }
+            }
+            
+            drawLineChart() {
+                const ctx = this.ctx;
+                const data = this.data;
+                const options = this.options;
+                
+                // Calculate chart area
+                const padding = 40;
+                const legendHeight = options.plugins.legend.display ? 30 : 0;
+                const chartWidth = this.width - padding * 2;
+                const chartHeight = this.height - padding * 2 - legendHeight;
+                const chartX = padding;
+                const chartY = padding + legendHeight;
+                
+                // Calculate scales
+                const yMax = Math.max(...data.datasets[0].data) * 1.1;
+                const xStep = chartWidth / (data.labels.length - 1);
+                const yStep = chartHeight / yMax;
+                
+                // Draw axes
+                ctx.beginPath();
+                ctx.strokeStyle = '#ccc';
+                ctx.lineWidth = 1;
+                ctx.moveTo(chartX, chartY);
+                ctx.lineTo(chartX, chartY + chartHeight);
+                ctx.lineTo(chartX + chartWidth, chartY + chartHeight);
+                ctx.stroke();
+                
+                // Draw Y-axis labels
+                ctx.font = '12px Arial';
+                ctx.fillStyle = '#666';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                
+                const yLabelCount = 5;
+                for (let i = 0; i <= yLabelCount; i++) {
+                    const yPos = chartY + chartHeight - (i * chartHeight / yLabelCount);
+                    const yValue = (i * yMax / yLabelCount).toFixed(0);
+                    
+                    ctx.fillText(yValue, chartX - 10, yPos);
+                    
+                    // Grid line
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#eee';
+                    ctx.moveTo(chartX, yPos);
+                    ctx.lineTo(chartX + chartWidth, yPos);
+                    ctx.stroke();
+                }
+                
+                // Draw X-axis labels
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                
+                data.labels.forEach((label, i) => {
+                    const xPos = chartX + i * xStep;
+                    ctx.fillText(label, xPos, chartY + chartHeight + 10);
+                    
+                    // Tick mark
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#ccc';
+                    ctx.moveTo(xPos, chartY + chartHeight);
+                    ctx.lineTo(xPos, chartY + chartHeight + 5);
+                    ctx.stroke();
+                });
+                
+                // Draw the line
+                if (data.datasets[0].data.length > 0) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = data.datasets[0].borderColor;
+                    ctx.lineWidth = data.datasets[0].borderWidth;
+                    ctx.lineJoin = 'round';
+                    
+                    // Draw line
+                    data.labels.forEach((_, i) => {
+                        const xPos = chartX + i * xStep;
+                        const yPos = chartY + chartHeight - data.datasets[0].data[i] * yStep;
+                        
+                        if (i === 0) {
+                            ctx.moveTo(xPos, yPos);
+                        } else {
+                            ctx.lineTo(xPos, yPos);
+                        }
+                    });
+                    ctx.stroke();
+                    
+                    // Fill area if required
+                    if (data.datasets[0].fill) {
+                        ctx.lineTo(chartX + (data.labels.length - 1) * xStep, chartY + chartHeight);
+                        ctx.lineTo(chartX, chartY + chartHeight);
+                        ctx.closePath();
+                        ctx.fillStyle = data.datasets[0].backgroundColor;
+                        ctx.fill();
+                    }
+                    
+                    // Draw points
+                    data.labels.forEach((_, i) => {
+                        const xPos = chartX + i * xStep;
+                        const yPos = chartY + chartHeight - data.datasets[0].data[i] * yStep;
+                        
+                        ctx.beginPath();
+                        ctx.fillStyle = data.datasets[0].pointBackgroundColor;
+                        ctx.arc(xPos, yPos, data.datasets[0].pointRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+                
+                // Draw legend
+                if (options.plugins.legend.display) {
+                    const dataset = data.datasets[0];
+                    ctx.font = 'bold 14px Arial';
+                    ctx.fillStyle = '#333';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(dataset.label, this.width / 2, 10);
+                }
+            }
+            
+            drawPieChart() {
+                const ctx = this.ctx;
+                const data = this.data;
+                const options = this.options;
+                
+                // Calculate chart area
+                const legendWidth = options.plugins.legend.position === 'right' ? 100 : 0;
+                const centerX = (this.width - legendWidth) / 2;
+                const centerY = this.height / 2;
+                const radius = Math.min(centerX, centerY) - 20;
+                
+                // Calculate total for percentage
+                const total = data.datasets[0].data.reduce((sum, value) => sum + value, 0);
+                
+                // Draw pie segments
+                let startAngle = -Math.PI / 2;
+                
+                data.datasets[0].data.forEach((value, i) => {
+                    if (value <= 0) return;
+                    
+                    const sliceAngle = (value / total) * (Math.PI * 2);
+                    const endAngle = startAngle + sliceAngle;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                    ctx.closePath();
+                    
+                    ctx.fillStyle = data.datasets[0].backgroundColor[i];
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = data.datasets[0].borderColor[i];
+                    ctx.lineWidth = data.datasets[0].borderWidth;
+                    ctx.stroke();
+                    
+                    startAngle = endAngle;
+                });
+                
+                // Draw legend
+                if (options.plugins.legend.display) {
+                    const legendX = options.plugins.legend.position === 'right' ? 
+                        this.width - legendWidth + 20 : 20;
+                    let legendY = 50;
+                    const itemHeight = 25;
+                    
+                    data.labels.forEach((label, i) => {
+                        // Color box
+                        ctx.fillStyle = data.datasets[0].backgroundColor[i];
+                        ctx.fillRect(legendX, legendY, 15, 15);
+                        
+                        ctx.strokeStyle = '#ccc';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(legendX, legendY, 15, 15);
+                        
+                        // Label text
+                        ctx.font = '12px Arial';
+                        ctx.fillStyle = '#333';
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'middle';
+                        
+                        // Calculate percentage
+                        const percentage = ((data.datasets[0].data[i] / total) * 100).toFixed(1);
+                        ctx.fillText(`${label} (${percentage}%)`, legendX + 25, legendY + 7.5);
+                        
+                        legendY += itemHeight;
+                    });
+                }
+            }
+            
+            update() {
+                this.draw();
+            }
+            
+            destroy() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+            }
+        }
+        
+        // Initialize the page with one empty row
+        window.onload = function() {
+            loadSampleTimeData();
+        }
+    </script>
+</body>
+</html>
